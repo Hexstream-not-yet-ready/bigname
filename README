@@ -1,0 +1,14 @@
+Hosted at: http://github.com/Hexstream/bigname
+
+
+This library converts potentially very big integers and fractions into their text representation.
+At this time, only conversion to french cardinal and ordinal is supported.
+
+
+Example:
+(number-to-french -132894362727827234/19837298127)
+==> "moins cent trente-deux billiards huit cent quatre-vingt-quatorze billions trois cent soixante-deux milliards sept cent vingt-sept millions huit cent vingt-sept mille deux cent trente-quatre dix-neuf milliards huit cent trente-sept millions deux cent quatre-vingt-dix-huit mille cent vingt-septième"
+
+
+This library is under the MIT license so you can do basically whatever with it.
+See the LICENSE file for details.
