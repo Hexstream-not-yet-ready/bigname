@@ -8,8 +8,7 @@
 
 (defsystem com.hexstreamsoft.bigname
   :author "Hexstream"
-  :depends-on (cl-utilities
-	       com.hexstreamsoft.lib)
+  :depends-on (com.hexstreamsoft.lib)
   :serial t
   :components ((:file "package")
 	       (:file "bigname")))
