@@ -1,5 +1,7 @@
 (in-package #:cl-user)
 
 (defpackage #:com.hexstreamsoft.bigname
-  (:use #:cl
-	#:com.hexstreamsoft.lib))
+  (:nicknames #:bigname)
+  (:use #:cl)
+  (:export #:number-to-french
+	   #:number-to-french-ordinal))

@@ -1,13 +1,44 @@
 Hosted at: http://github.com/Hexstream/bigname
 
 
-This library converts potentially very big integers and fractions into their text representation.
-At this time, only conversion to french cardinal and ordinal is supported.
+This library converts potentially very big integers and fractions into
+their text representation. At this time, only conversion to french
+cardinal and ordinal is supported.
 
 
 Example:
 (number-to-french -132894362727827234/19837298127)
 ==> "moins cent trente-deux billiards huit cent quatre-vingt-quatorze billions trois cent soixante-deux milliards sept cent vingt-sept millions huit cent vingt-sept mille deux cent trente-quatre dix-neuf milliards huit cent trente-sept millions deux cent quatre-vingt-dix-huit mille cent vingt-septième"
+
+
+API
+
+Function: number-to-french number &optional stream
+
+Spell out NUMBER in French, as a cardinal number.
+
+If STREAM is NIL (the default), return the result as a string. Else,
+output the result to STREAM and return undefined values.
+
+
+Function: number-to-french-ordinal number &optional stream
+
+Spell out NUMBER in French, as an ordinal number.
+
+If STREAM is NIL (the default), return the result as a string. Else,
+output the result to STREAM and return undefined values.
+
+
+#:bigname is provided as a package nickname for #:com.hexstreamsoft.bigname.
+
+
+KNOWN LIMITATIONS
+
+There's no support for feminine gender and plural form at this time.
+Ex: (format nil "~A oranges." (number-to-french 21))
+=> "vingt et un oranges." instead of "vingt et unes oranges."
+Also, (number-to-french 21/2) => "vingt et un demie" instead of "vingt et unes demies".
+
 
 
 This library is under the MIT license so you can do basically whatever with it.

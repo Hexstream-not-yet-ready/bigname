@@ -7,8 +7,7 @@
 
 
 (defsystem com.hexstreamsoft.bigname
-  :author "Hexstream"
-  :depends-on (com.hexstreamsoft.lib)
-  :serial t
+  :author "Jean-Philippe Paradis <hexstream@gmail.com>"
+  :version "0.1"
   :components ((:file "package")
-	       (:file "bigname")))
+	       (:file "main" :depends-on ("package"))))

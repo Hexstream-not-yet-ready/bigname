@@ -1,5 +1,16 @@
 (in-package #:com.hexstreamsoft.bigname)
 
+(defmacro with-output-to-string-or-stream ((var &optional (string-or-stream var))
+					   &body body)
+  (let ((shared (gensym "SHARED")))
+    `(flet ((,shared (,var)
+	      ,@body))
+       (let ((,var ,string-or-stream))
+	 (if ,var
+	     (,shared ,var)
+	     (with-output-to-string (,var)
+	       (,shared ,var)))))))
+
 (defparameter *below-20* #("zéro" "un" "deux" "trois" "quatre" "cinq"
 			 "six" "sept" "huit" "neuf"
 			 "dix" "onze" "douze" "treize" "quatorze" "quinze"
@@ -9,9 +20,21 @@
 (defparameter *thousands* #("m" "b" "tr" "quatr" "quint" "sext" "sept"  "oct" "non"))
 (defparameter *bof* #("dec" "vi" "tri" "quadra" "quinqua" "sexa" "septua" "octo" "nona"))
 
-(defparameter *denominators* #("demi" "tiers" "quart"))
+(defparameter *denominators* #("demie" "tiers" "quart"))
+
+(declaim (inline unit-to-french
+		 ten-to-french
+		 hundred-to-french
+		 thousand-to-french))
+
+(defun unit-to-french (number stream)
+  (declare (type (integer 0 9) number)
+	   (type stream stream))
+  (write-string (svref *below-20* number) stream))
 
 (defun ten-to-french (number stream)
+  (declare (type (integer 10 99) number)
+	   (type stream stream))
   (cond ((> number 80)
 	 (write-string (svref *tens* 8) stream)
 	 (write-char #\- stream)
@@ -34,9 +57,11 @@
 				 " et "
 				 "-")
 			     stream)
-	       (number-to-french rest stream))))))
+	       (unit-to-french rest stream))))))
 
 (defun hundred-to-french (number stream)
+  (declare (type (integer 100 999) number)
+	   (type stream stream))
   (multiple-value-bind (main rest) (floor number 100)
     (if (= main 1)
 	(write-string "cent" stream)
@@ -49,6 +74,7 @@
       (number-to-french rest stream))))
 
 (defun thousand-to-french (number stream)
+  (declare (type (integer 1000 999999) number))
   (multiple-value-bind (main rest) (floor number 1000)
     (when (> main 1)
       (number-to-french main stream)
@@ -59,15 +85,31 @@
       (number-to-french rest stream))))
 
 (defun big-designation (zeroes stream)
-  (let ((groups (floor zeroes 3)))
-    (write-string (svref *thousands* (1- (floor groups 2))) stream)
-    (write-string (if (evenp groups)
-		      "illion"
-		      "illiard")
-		  stream)))
+  (declare (type (integer 6) zeroes)
+	   (type stream stream))
+  (let* ((groups (floor zeroes 3))
+	 (index (1- (floor groups 2))))
+    (if (< index (length *thousands*))
+	(progn (write-string (svref *thousands* index) stream)
+	       (write-string (if (evenp groups)
+				 "illion"
+				 "illiard")
+			     stream))
+	(error "Sorry, don't know what the designation is for ~A groupings."
+	       (1+ groups)))))
+
+;; Algorithm from stassats. Thanks!
+(defun decimal-length (number)
+  (do* ((estimate (ceiling (integer-length number) 3) (1- estimate))
+	(exp (expt 10 (1- estimate)) (truncate exp 10)))
+      ((plusp (truncate number exp)) estimate))
+  #+nil(let ((estimate (ceiling (integer-length number) 3)))
+	 (loop for new-estimate from estimate downto 0
+	       for exp = (expt 10 (1- estimate)) then (truncate exp 10)
+	       when (plusp (truncate number exp)) return new-estimate)))
 
 (defun big-to-french (number stream)
-  (let* ((zeroes (floor (log number 10)))
+  (let* ((zeroes (1- (decimal-length number)))
 	 (lion (expt 10 (* (floor zeroes 3) 3)))
 	 (main (floor number lion))
 	 (rest (- number (* main lion))))
@@ -76,7 +118,7 @@
     (big-designation zeroes stream)
     (if (> main 1)
 	(write-char #\s stream))
-    (when (not (zerop rest))
+    (unless (zerop rest)
       (write-char #\Space stream)
       (number-to-french rest stream))))
 
@@ -95,34 +137,38 @@
 		     ((< number 1000000)
 		      (thousand-to-french number stream))
 		     (t (big-to-french number stream))))
-      (ratio (number-to-french (numerator number) stream)
-	     (write-char #\Space stream)
-	     (let ((denominator (denominator number)))
-	       (if (<= denominator 4)
-		   (write-string (svref *denominators* (- denominator 2)) stream)
-		   (number-to-french-ordinal denominator stream)))))))
+      (ratio (let ((numerator (numerator number)))
+	       (number-to-french numerator stream)
+	       (write-char #\Space stream)
+	       (let ((denominator (denominator number)))
+		 (if (<= denominator 4)
+		     (progn
+		       (write-string (svref *denominators* (- denominator 2)) stream)
+		       (when (and (member denominator '(2 4)) (/= numerator 1))
+			 (write-char #\s stream)))
+		     (number-to-french-ordinal denominator stream))))))))
 
 (defun number-to-french-ordinal (number &optional stream)
   (check-type number (integer 1))
   (with-output-to-string-or-stream (stream)
-    (if (= number 1)
-	(write-string "premier" stream)
-	(if (= number 80)
-	    (write-string "quatre-vingtième" stream)
-	    (if (= number 81)
-		(write-string "quatre-vingt et unième" stream)
-		(let* ((base (number-to-french number))
-		       (last-position (1- (length base)))
-		       (last-character (char base last-position)))
-		  (cond ((and (eql last-character #\f)
-			      (= (mod number 10) 9))
-			 (write-string base stream :end last-position)
-			 (write-string "vième" stream))
-			((and (eql last-character #\q)
-			      (= (mod number 10) 5))
-			 (write-string base stream)
-			 (write-string "uième" stream))
-			(t (write-string base stream
-					 :end (if (eql last-character #\e)
-						  last-position))
-			   (write-string "ième" stream)))))))))
+    (case number
+      ;; Could have used assoc for the special cases,
+      ;; but I think this way is better for the compiler.
+      (1 (write-string "premier" stream))
+      (80 (write-string "quatre-vingtième" stream))
+      (81 (write-string "quatre-vingt et unième" stream))
+      (t (let* ((base (number-to-french number))
+		(last-position (1- (length base)))
+		(last-character (char base last-position)))
+	   (cond ((and (eql last-character #\f)
+		       (= (mod number 10) 9))
+		  (write-string base stream :end last-position)
+		  (write-string "vième" stream))
+		 ((and (eql last-character #\q)
+		       (= (mod number 10) 5))
+		  (write-string base stream)
+		  (write-string "uième" stream))
+		 (t (write-string base stream
+				  :end (if (eql last-character #\e)
+					   last-position))
+		  (write-string "ième" stream))))))))

@@ -1,0 +1,42 @@
+2011-03-18  Jean-Philippe Paradis  <hexstream@gmail.com>
+
+	Version 0.1
+
+	Remove com.hexstreamsoft.lib dependency.
+
+
+	* com.hexstreamsoft.bigname.asd:
+
+	Put my real name
+
+	Put a version;
+
+	Stop using :serial t.
+
+
+	* package.lisp:
+
+	New package nickname BIGNAME.
+
+	Export NUMBER-TO-FRENCH and NUMBER-TO-FRENCH-ORDINAL.
+
+
+	* bigname.lisp:
+
+	Rename to main.lisp.
+
+	Fix a float-induced bug related to computing
+	the digit count of some big numbers.
+
+	Properly pluralize halves and fourths.
+
+	Put halves in feminine form (demies).
+
+
+	* README:
+
+	Document the tiny API.
+
+	Document known limitations.
+
+	Document new package nickname.
