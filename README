@@ -40,6 +40,5 @@ Ex: (format nil "~A oranges." (number-to-french 21))
 Also, (number-to-french 21/2) => "vingt et un demie" instead of "vingt et unes demies".
 
 
-
-This library is under the MIT license so you can do basically whatever with it.
-See the LICENSE file for details.
+This library is in the Public Domain.
+See the UNLICENSE file for details.
