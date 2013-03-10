@@ -6,5 +6,6 @@
   :license "Public Domain"
 
   :version "0.1"
+  :serial cl:t
   :components ((:file "package")
-	       (:file "main" :depends-on ("package"))))
+	       (:file "main")))
